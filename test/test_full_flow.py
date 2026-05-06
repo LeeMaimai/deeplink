@@ -71,15 +71,15 @@ requests.post(f"{BASE}/api/reset")
 sep("USER A: Twitter → iOS App Store → Install → Register")
 # ============================================================
 
-print("\n1. User A sees a tweet, clicks link to onekey.so/download?channel=twitter&campaign=spring2026")
+print("\n1. User A sees a tweet, clicks link to example.com/download?channel=twitter&campaign=spring2026")
 visit({
     "ip": "203.0.113.50",
     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15",
     "screen": "1206x2622",
     "language": "zh-CN",
     "timezone": "Asia/Shanghai",
-    "referrer": "https://twitter.com/OneKeyHQ/status/123456",
-    "page_url": "https://onekey.so/download?channel=twitter&campaign=spring2026",
+    "referrer": "https://twitter.com/DemoApp/status/123456",
+    "page_url": "https://example.com/download?channel=twitter&campaign=spring2026",
     "channel": "twitter",
     "campaign": "spring2026",
     "session_id": "sess_userA",
@@ -100,7 +100,7 @@ click({
     "time": NOW - 590,
 })
 
-print("\n3. User A installs from App Store and opens OneKey for the first time")
+print("\n3. User A installs from App Store and opens the app for the first time")
 install({
     "ip": "203.0.113.50",
     "screen": "1206x2622",
@@ -126,7 +126,7 @@ register({
 sep("USER B: Google Ads → Android Google Play → Install (IP changed)")
 # ============================================================
 
-print("\n1. User B clicks Google ad, lands on onekey.so/download?channel=google&campaign=sem_q1")
+print("\n1. User B clicks Google ad, lands on example.com/download?channel=google&campaign=sem_q1")
 visit({
     "ip": "120.78.10.50",
     "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 8 Build/AP3A) AppleWebKit/537.36",
@@ -134,7 +134,7 @@ visit({
     "language": "en-US",
     "timezone": "America/Los_Angeles",
     "referrer": "https://www.google.com/",
-    "page_url": "https://onekey.so/download?channel=google&campaign=sem_q1",
+    "page_url": "https://example.com/download?channel=google&campaign=sem_q1",
     "channel": "google",
     "campaign": "sem_q1",
     "session_id": "sess_userB",
@@ -181,15 +181,15 @@ register({
 sep("USER C: Telegram → Desktop (direct download)")
 # ============================================================
 
-print("\n1. User C clicks Telegram link to onekey.so/download?channel=telegram&campaign=airdrop")
+print("\n1. User C clicks Telegram link to example.com/download?channel=telegram&campaign=airdrop")
 visit({
     "ip": "210.148.100.5",
     "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
     "screen": "3840x2160",
     "language": "ja",
     "timezone": "Asia/Tokyo",
-    "referrer": "https://t.me/OneKeyHQ",
-    "page_url": "https://onekey.so/download?channel=telegram&campaign=airdrop",
+    "referrer": "https://t.me/DemoApp",
+    "page_url": "https://example.com/download?channel=telegram&campaign=airdrop",
     "channel": "telegram",
     "campaign": "airdrop",
     "session_id": "sess_userC",
@@ -230,7 +230,7 @@ install({
 sep("USER D: Organic install (no prior click)")
 # ============================================================
 
-print("\n1. User D searches App Store directly and installs OneKey")
+print("\n1. User D searches App Store directly and installs the app")
 install({
     "ip": "180.150.60.70",
     "screen": "1179x2556",

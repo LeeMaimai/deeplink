@@ -1,5 +1,5 @@
 """
-OneKey Attribution Service
+Attribution Service
 
 API:
   POST /api/track/visit    事件1：访问网页

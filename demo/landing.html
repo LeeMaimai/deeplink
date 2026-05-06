@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OneKey - Download</title>
+  <title>App Download</title>
   <script src="/sdk/attribution.js" data-server=""></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,7 +31,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>OneKey Wallet</h1>
+    <h1>Demo Wallet</h1>
     <p class="subtitle">Attribution Demo - Download Page</p>
 
     <div class="download-buttons">
@@ -73,7 +73,7 @@
   <script>
     // 显示调试信息
     window.addEventListener('load', function() {
-      var info = OnekeyAttribution.getInfo();
+      var info = AttributionSDK.getInfo();
       document.getElementById('params').innerText = JSON.stringify(info.params);
       document.getElementById('session').innerText = info.session_id;
       document.getElementById('screen').innerText = info.fingerprint.screen;
@@ -90,7 +90,7 @@
     }
 
     function download(platform) {
-      OnekeyAttribution.trackClick({ platform: platform }, function(res) {
+      AttributionSDK.trackClick({ platform: platform }, function(res) {
         if (res && res.ok) {
           showToast('Click #' + res.click_id + ' recorded (' + platform + ')');
         }

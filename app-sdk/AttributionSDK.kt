@@ -1,13 +1,13 @@
 /**
- * OneKey Attribution Android SDK
+ * Attribution Android SDK
  *
  * 接入方式：
  * 1. 将此文件加入项目
- * 2. 在 App 首次启动时调用 OnekeyAttribution.trackInstall()
- * 3. 在用户注册成功时调用 OnekeyAttribution.trackRegister()
+ * 2. 在 App 首次启动时调用 AttributionSDK.trackInstall()
+ * 3. 在用户注册成功时调用 AttributionSDK.trackRegister()
  */
 
-package com.onekey.attribution
+package com.attribution.demo
 
 import android.content.Context
 import android.content.res.Resources
@@ -20,12 +20,12 @@ import java.util.Locale
 import java.util.TimeZone
 import kotlin.concurrent.thread
 
-object OnekeyAttribution {
+object AttributionSDK {
 
     // TODO: 替换为你的归因服务地址
     var server = "https://your-attribution-server.com"
 
-    private const val PREFS_NAME = "onekey_attribution"
+    private const val PREFS_NAME = "attribution_demo"
     private const val KEY_TRACKED = "tracked"
     private const val KEY_CHANNEL = "channel"
     private const val KEY_CAMPAIGN = "campaign"

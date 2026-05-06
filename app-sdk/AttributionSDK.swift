@@ -1,23 +1,23 @@
 /**
- * OneKey Attribution iOS SDK
+ * Attribution iOS SDK
  *
  * 接入方式：
  * 1. 将此文件加入项目
- * 2. 在 App 首次启动时调用 OnekeyAttribution.trackInstall()
- * 3. 在用户注册成功时调用 OnekeyAttribution.trackRegister()
+ * 2. 在 App 首次启动时调用 AttributionSDK.trackInstall()
+ * 3. 在用户注册成功时调用 AttributionSDK.trackRegister()
  */
 
 import UIKit
 
-class OnekeyAttribution {
+class AttributionSDK {
 
     // TODO: 替换为你的归因服务地址
     static let server = "https://your-attribution-server.com"
 
-    private static let trackedKey = "onekey_attribution_tracked"
-    private static let channelKey = "onekey_attribution_channel"
-    private static let campaignKey = "onekey_attribution_campaign"
-    private static let paramsKey = "onekey_attribution_params"
+    private static let trackedKey = "attribution_tracked"
+    private static let channelKey = "attribution_channel"
+    private static let campaignKey = "attribution_campaign"
+    private static let paramsKey = "attribution_params"
 
     // MARK: - 事件3：首次打开App
 

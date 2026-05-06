@@ -1,19 +1,19 @@
 /**
- * OneKey Attribution Web SDK
+ * Attribution Web SDK
  *
  * 用法:
  *   <script src="/sdk/attribution.js" data-server="http://localhost:5050"></script>
  *
  *   // 页面加载时自动触发 visit 事件
  *   // 手动触发 click 事件:
- *   OnekeyAttribution.trackClick({ platform: "ios" });
+ *   AttributionSDK.trackClick({ platform: "ios" });
  */
 
 (function () {
   "use strict";
 
   var SERVER = "";
-  var SESSION_KEY = "ok_attr_session";
+  var SESSION_KEY = "attr_session";
   var sessionId = "";
 
   // ---------- 工具函数 ----------
@@ -176,5 +176,5 @@
   }
 
   // 挂载到全局
-  window.OnekeyAttribution = SDK;
+  window.AttributionSDK = SDK;
 })();
