@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OneKey - Download</title>
+  <script src="/sdk/attribution.js" data-server=""></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
+    .container { max-width: 480px; margin: 0 auto; padding: 40px 20px; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    .subtitle { color: #888; margin-bottom: 32px; }
+    .download-buttons { display: flex; flex-direction: column; gap: 12px; }
+    .dl-btn { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-radius: 12px; border: 1px solid #333; background: #1a1a1a; color: #fff; font-size: 16px; cursor: pointer; transition: background 0.2s; }
+    .dl-btn:hover { background: #2a2a2a; }
+    .dl-btn .icon { font-size: 24px; }
+    .dl-btn .text { flex: 1; }
+    .dl-btn .text small { display: block; color: #888; font-size: 12px; }
+    .info-panel { margin-top: 32px; background: #111; border: 1px solid #222; border-radius: 12px; padding: 16px; }
+    .info-panel h3 { font-size: 14px; color: #666; margin-bottom: 12px; }
+    .field { display: flex; margin: 6px 0; font-size: 12px; }
+    .field .label { color: #555; width: 90px; flex-shrink: 0; }
+    .field .value { color: #aaa; font-family: monospace; word-break: break-all; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2e7d32; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; display: none; z-index: 100; }
+    .toast.show { display: block; }
+    .links { margin-top: 24px; text-align: center; }
+    .links a { color: #555; font-size: 13px; text-decoration: none; }
+    .links a:hover { color: #888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>OneKey Wallet</h1>
+    <p class="subtitle">Attribution Demo - Download Page</p>
+
+    <div class="download-buttons">
+      <button class="dl-btn" onclick="download('ios')">
+        <span class="icon">&#63743;</span>
+        <span class="text">App Store<small>iOS</small></span>
+      </button>
+      <button class="dl-btn" onclick="download('android')">
+        <span class="icon">&#9654;</span>
+        <span class="text">Google Play<small>Android</small></span>
+      </button>
+      <button class="dl-btn" onclick="download('desktop')">
+        <span class="icon">&#128187;</span>
+        <span class="text">Desktop App<small>macOS / Windows / Linux</small></span>
+      </button>
+      <button class="dl-btn" onclick="download('extension')">
+        <span class="icon">&#127760;</span>
+        <span class="text">Browser Extension<small>Chrome / Firefox / Edge</small></span>
+      </button>
+    </div>
+
+    <div class="info-panel">
+      <h3>Tracking Info (debug)</h3>
+      <div class="field"><span class="label">URL Params</span><span class="value" id="params">-</span></div>
+      <div class="field"><span class="label">Session</span><span class="value" id="session">-</span></div>
+      <div class="field"><span class="label">Screen</span><span class="value" id="screen">-</span></div>
+      <div class="field"><span class="label">Language</span><span class="value" id="lang">-</span></div>
+      <div class="field"><span class="label">Timezone</span><span class="value" id="tz">-</span></div>
+      <div class="field"><span class="label">UA</span><span class="value" id="ua">-</span></div>
+    </div>
+
+    <div class="links">
+      <a href="/dashboard">View Dashboard &rarr;</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // 显示调试信息
+    window.addEventListener('load', function() {
+      var info = OnekeyAttribution.getInfo();
+      document.getElementById('params').innerText = JSON.stringify(info.params);
+      document.getElementById('session').innerText = info.session_id;
+      document.getElementById('screen').innerText = info.fingerprint.screen;
+      document.getElementById('lang').innerText = info.fingerprint.language;
+      document.getElementById('tz').innerText = info.fingerprint.timezone;
+      document.getElementById('ua').innerText = info.fingerprint.ua.substring(0, 80) + '...';
+    });
+
+    function showToast(msg) {
+      var el = document.getElementById('toast');
+      el.innerText = msg;
+      el.className = 'toast show';
+      setTimeout(function() { el.className = 'toast'; }, 3000);
+    }
+
+    function download(platform) {
+      OnekeyAttribution.trackClick({ platform: platform }, function(res) {
+        if (res && res.ok) {
+          showToast('Click #' + res.click_id + ' recorded (' + platform + ')');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

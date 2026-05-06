@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attribution Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8f9fa; color: #333; padding: 20px; }
+    .header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    h1 { font-size: 22px; }
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .btn-primary { background: #0066cc; color: #fff; }
+    .btn-danger { background: #eee; color: #999; }
+    .btn-danger:hover { background: #fee; color: #c00; }
+
+    /* Funnel */
+    .funnel { display: flex; gap: 0; margin-bottom: 24px; align-items: stretch; }
+    .funnel-step { flex: 1; background: #fff; padding: 16px; text-align: center; border: 1px solid #e0e0e0; position: relative; }
+    .funnel-step:first-child { border-radius: 8px 0 0 8px; }
+    .funnel-step:last-child { border-radius: 0 8px 8px 0; }
+    .funnel-step .num { font-size: 28px; font-weight: 700; }
+    .funnel-step .label { font-size: 12px; color: #888; margin-top: 2px; }
+    .funnel-step .rate { font-size: 11px; color: #0066cc; margin-top: 4px; }
+    .funnel-arrow { display: flex; align-items: center; color: #ccc; font-size: 20px; padding: 0 4px; }
+
+    /* Match stats */
+    .match-stats { display: flex; gap: 12px; margin-bottom: 24px; }
+    .match-stat { background: #fff; padding: 12px 20px; border-radius: 8px; border: 1px solid #e0e0e0; text-align: center; }
+    .match-stat .num { font-size: 24px; font-weight: 700; }
+    .match-stat .label { font-size: 11px; color: #888; }
+    .match-stat.green .num { color: #2e7d32; }
+    .match-stat.red .num { color: #c62828; }
+    .match-stat.blue .num { color: #0066cc; }
+
+    /* Tables */
+    h2 { font-size: 16px; margin: 20px 0 8px; color: #555; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; margin-bottom: 20px; font-size: 12px; }
+    th { background: #f5f5f5; padding: 8px 10px; text-align: left; font-weight: 600; color: #666; border-bottom: 1px solid #e0e0e0; }
+    td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; font-family: monospace; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .tag-green { background: #e8f5e9; color: #2e7d32; }
+    .tag-red { background: #ffebee; color: #c62828; }
+    .tag-blue { background: #e3f2fd; color: #1565c0; }
+    .tag-gray { background: #f5f5f5; color: #999; }
+    .details { font-size: 11px; color: #888; line-height: 1.6; }
+    .empty { text-align: center; color: #ccc; padding: 20px; }
+    .links { text-align: center; margin-top: 16px; }
+    .links a { color: #0066cc; font-size: 13px; margin: 0 12px; text-decoration: none; }
+
+    .filters { display: flex; gap: 4px; }
+    .filter-btn { padding: 4px 12px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; font-size: 12px; color: #666; }
+    .filter-btn:hover { background: #f5f5f5; }
+    .filter-btn.active { background: #0066cc; color: #fff; border-color: #0066cc; }
+
+    tr.row-matched { background: #f8fff8; }
+    tr.row-unmatched { background: #fff8f8; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Attribution Dashboard</h1>
+    <button class="btn btn-primary" onclick="load()">Refresh</button>
+    <button class="btn btn-danger" onclick="resetAll()">Reset</button>
+  </div>
+
+  <!-- Funnel -->
+  <div class="funnel" id="funnel"></div>
+
+  <!-- Match stats -->
+  <div class="match-stats" id="matchStats"></div>
+
+  <!-- Install matching details -->
+  <div style="display:flex; align-items:center; gap:12px; margin:20px 0 8px;">
+    <h2 style="margin:0;">Install Matching Details</h2>
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" data-filter="matched" onclick="setFilter('matched',this)">Matched</button>
+      <button class="filter-btn" data-filter="unmatched" onclick="setFilter('unmatched',this)">Unmatched</button>
+    </div>
+    <div style="flex:1;"></div>
+    <div class="sort-toggle">
+      <label style="font-size:12px;color:#888;cursor:pointer;">
+        <input type="checkbox" id="sortByScore" onchange="load()" checked> Sort by score
+      </label>
+    </div>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Install</th><th>Time</th><th>IP</th><th>Screen</th><th>Instance ID</th>
+      <th>Matched Click</th><th>Score</th><th>Channel</th><th>Scoring Details</th>
+    </tr></thead>
+    <tbody id="installBody"></tbody>
+  </table>
+
+  <!-- Clicks -->
+  <h2>Clicks</h2>
+  <table>
+    <thead><tr>
+      <th>ID</th><th>Time</th><th>IP</th><th>Screen</th><th>Platform</th>
+      <th>Channel</th><th>Campaign</th><th>Matched Install</th>
+    </tr></thead>
+    <tbody id="clickBody"></tbody>
+  </table>
+
+  <!-- Visits -->
+  <h2>Visits</h2>
+  <table>
+    <thead><tr>
+      <th>ID</th><th>Time</th><th>IP</th><th>Referrer</th><th>Channel</th><th>Campaign</th>
+    </tr></thead>
+    <tbody id="visitBody"></tbody>
+  </table>
+
+  <!-- Registers -->
+  <h2>Registers</h2>
+  <table>
+    <thead><tr>
+      <th>ID</th><th>Time</th><th>Instance ID</th><th>Linked Install</th><th>Channel</th>
+    </tr></thead>
+    <tbody id="registerBody"></tbody>
+  </table>
+
+  <div class="links">
+    <a href="/?channel=twitter&campaign=spring2026">Landing (twitter)</a>
+    <a href="/?channel=google&campaign=sem_q1">Landing (google)</a>
+    <a href="/?channel=telegram&campaign=airdrop">Landing (telegram)</a>
+  </div>
+
+  <script>
+    function ts(t) { return new Date(t * 1000).toLocaleString(); }
+    function pct(a, b) { return b > 0 ? (a / b * 100).toFixed(1) + '%' : '-'; }
+    function esc(s) { return String(s || '').replace(/</g, '&lt;'); }
+
+    function load() {
+      Promise.all([
+        fetch('/api/stats').then(r => r.json()),
+        fetch('/api/records').then(r => r.json())
+      ]).then(function(res) {
+        var stats = res[0], data = res[1];
+        renderFunnel(stats.funnel);
+        renderMatchStats(stats.matching);
+        renderInstalls(data.installs);
+        renderClicks(data.clicks);
+        renderVisits(data.visits);
+        renderRegisters(data.registers);
+      });
+    }
+
+    function renderFunnel(f) {
+      var html = '';
+      var steps = [
+        { label: 'Visits', num: f.visits },
+        { label: 'Clicks', num: f.clicks, rate: pct(f.clicks, f.visits) },
+        { label: 'Installs', num: f.installs, rate: pct(f.installs, f.clicks) },
+        { label: 'Registers', num: f.registers, rate: pct(f.registers, f.installs) },
+      ];
+      steps.forEach(function(s, i) {
+        if (i > 0) html += '<div class="funnel-arrow">&rarr;</div>';
+        html += '<div class="funnel-step"><div class="num">' + s.num + '</div><div class="label">' + s.label + '</div>' +
+          (s.rate ? '<div class="rate">' + s.rate + '</div>' : '') + '</div>';
+      });
+      document.getElementById('funnel').innerHTML = html;
+    }
+
+    function renderMatchStats(m) {
+      document.getElementById('matchStats').innerHTML =
+        '<div class="match-stat green"><div class="num">' + m.matched + '</div><div class="label">Matched</div></div>' +
+        '<div class="match-stat red"><div class="num">' + m.unmatched + '</div><div class="label">Unmatched</div></div>' +
+        '<div class="match-stat blue"><div class="num">' + m.match_rate + '</div><div class="label">Match Rate</div></div>';
+    }
+
+    var currentFilter = 'all';
+    var allInstalls = [];
+
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.className = 'filter-btn'; });
+      btn.className = 'filter-btn active';
+      renderInstalls(allInstalls);
+    }
+
+    function renderInstalls(installs) {
+      allInstalls = installs;
+      if (!installs.length) { document.getElementById('installBody').innerHTML = '<tr><td colspan="9" class="empty">No installs</td></tr>'; return; }
+
+      // Filter
+      var filtered = installs;
+      if (currentFilter === 'matched') filtered = installs.filter(function(i) { return i.match && i.match.matched; });
+      if (currentFilter === 'unmatched') filtered = installs.filter(function(i) { return !i.match || !i.match.matched; });
+
+      // Sort
+      if (document.getElementById('sortByScore').checked) {
+        filtered = filtered.slice().sort(function(a, b) { return (b.match ? b.match.score : 0) - (a.match ? a.match.score : 0); });
+      }
+
+      if (!filtered.length) { document.getElementById('installBody').innerHTML = '<tr><td colspan="9" class="empty">No ' + currentFilter + ' installs</td></tr>'; return; }
+
+      var html = '';
+      filtered.forEach(function(i) {
+        var m = i.match || {};
+        var isMatched = m.matched;
+        var tagClass = isMatched ? 'tag-green' : 'tag-red';
+        var matchText = isMatched ? 'Click #' + m.click_id : 'No match';
+        var scoreClass = m.score >= 50 ? 'tag-green' : 'tag-red';
+        var rowClass = isMatched ? 'row-matched' : 'row-unmatched';
+        html += '<tr class="' + rowClass + '">' +
+          '<td>#' + i.id + '</td>' +
+          '<td>' + ts(i.time) + '</td>' +
+          '<td>' + esc(i.ip) + '</td>' +
+          '<td>' + esc(i.screen) + '</td>' +
+          '<td>' + esc(i.instance_id) + '</td>' +
+          '<td><span class="tag ' + tagClass + '">' + matchText + '</span></td>' +
+          '<td><span class="tag ' + scoreClass + '">' + m.score + '</span></td>' +
+          '<td>' + (isMatched ? '<span class="tag tag-blue">' + esc(m.channel) + '</span>' : '-') + '</td>' +
+          '<td class="details">' + (m.details || []).join('<br>') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('installBody').innerHTML = html;
+    }
+
+    function renderClicks(clicks) {
+      if (!clicks.length) { document.getElementById('clickBody').innerHTML = '<tr><td colspan="8" class="empty">No clicks</td></tr>'; return; }
+      var html = '';
+      clicks.forEach(function(c) {
+        html += '<tr>' +
+          '<td>#' + c.id + '</td>' +
+          '<td>' + ts(c.time) + '</td>' +
+          '<td>' + esc(c.ip) + '</td>' +
+          '<td>' + esc(c.screen) + '</td>' +
+          '<td><span class="tag tag-gray">' + esc(c.platform) + '</span></td>' +
+          '<td>' + esc(c.channel) + '</td>' +
+          '<td>' + esc(c.campaign) + '</td>' +
+          '<td>' + (c.matched_install_id ? '<span class="tag tag-green">Install #' + c.matched_install_id + '</span>' : '<span class="tag tag-gray">-</span>') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('clickBody').innerHTML = html;
+    }
+
+    function renderVisits(visits) {
+      if (!visits.length) { document.getElementById('visitBody').innerHTML = '<tr><td colspan="6" class="empty">No visits</td></tr>'; return; }
+      var html = '';
+      visits.forEach(function(v) {
+        html += '<tr><td>#' + v.id + '</td><td>' + ts(v.time) + '</td><td>' + esc(v.ip) + '</td><td>' + esc(v.referrer || '-') + '</td><td>' + esc(v.channel) + '</td><td>' + esc(v.campaign) + '</td></tr>';
+      });
+      document.getElementById('visitBody').innerHTML = html;
+    }
+
+    function renderRegisters(regs) {
+      if (!regs.length) { document.getElementById('registerBody').innerHTML = '<tr><td colspan="5" class="empty">No registers</td></tr>'; return; }
+      var html = '';
+      regs.forEach(function(r) {
+        html += '<tr><td>#' + r.id + '</td><td>' + ts(r.time) + '</td><td>' + esc(r.instance_id) + '</td><td>' + (r.install_id ? 'Install #' + r.install_id : '-') + '</td><td>' + esc(r.channel) + '</td></tr>';
+      });
+      document.getElementById('registerBody').innerHTML = html;
+    }
+
+    function resetAll() {
+      if (confirm('Clear all data?')) fetch('/api/reset', {method:'POST'}).then(load);
+    }
+
+    load();
+  </script>
+</body>
+</html>

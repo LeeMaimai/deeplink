@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Simulator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f8f9fa; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { font-size: 22px; margin-bottom: 4px; }
+    .subtitle { color: #888; font-size: 14px; margin-bottom: 24px; }
+
+    .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .card h2 { font-size: 16px; margin-bottom: 12px; color: #333; }
+    .card p { font-size: 13px; color: #888; margin-bottom: 12px; }
+
+    label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; margin-top: 10px; }
+    select, input { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: monospace; }
+    select { appearance: auto; }
+
+    .btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 16px; transition: all 0.2s; }
+    .btn-install { background: #0066cc; color: #fff; }
+    .btn-install:hover { background: #0055aa; }
+    .btn-register { background: #2e7d32; color: #fff; }
+    .btn-register:hover { background: #256d28; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+
+    .result { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-family: monospace; display: none; white-space: pre-wrap; line-height: 1.6; }
+    .result.show { display: block; }
+    .result.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+    .result.fail { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+    .result.info { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+
+    .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .preset { padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; }
+    .preset:hover { background: #f0f0f0; }
+    .preset.active { background: #0066cc; color: #fff; border-color: #0066cc; }
+
+    .nav { display: flex; gap: 12px; margin-bottom: 20px; }
+    .nav a { color: #0066cc; font-size: 13px; text-decoration: none; padding: 6px 12px; border-radius: 6px; background: #e3f2fd; }
+    .nav a:hover { background: #bbdefb; }
+
+    .steps { display: flex; gap: 0; margin-bottom: 24px; }
+    .step { flex: 1; text-align: center; padding: 10px; font-size: 12px; color: #999; border-bottom: 3px solid #eee; }
+    .step.done { color: #2e7d32; border-color: #2e7d32; }
+    .step.current { color: #0066cc; border-color: #0066cc; font-weight: 600; }
+    .step .num { display: block; font-size: 18px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>App Simulator</h1>
+    <p class="subtitle">Simulate App-side events (install & register) to test matching</p>
+
+    <div class="nav">
+      <a href="/?channel=twitter&campaign=spring2026">1. Landing Page (twitter)</a>
+      <a href="/app-simulator">2. App Simulator (here)</a>
+      <a href="/dashboard">3. Dashboard</a>
+    </div>
+
+    <div class="steps">
+      <div class="step done" id="step1"><span class="num">1</span>Visit Page</div>
+      <div class="step done" id="step2"><span class="num">2</span>Click Download</div>
+      <div class="step current" id="step3"><span class="num">3</span>Open App</div>
+      <div class="step" id="step4"><span class="num">4</span>Register</div>
+    </div>
+
+    <!-- Device Preset -->
+    <div class="card">
+      <h2>Select Device</h2>
+      <p>Choose a device preset or enter custom fingerprint values.</p>
+      <div class="presets" id="presets"></div>
+
+      <label>IP Address</label>
+      <input id="ip" value="">
+      <label>Screen (physical pixels)</label>
+      <input id="screen" value="">
+      <label>OS</label>
+      <input id="os" value="">
+      <label>OS Version</label>
+      <input id="osVersion" value="">
+      <label>Model</label>
+      <input id="model" value="">
+      <label>Language</label>
+      <input id="language" value="">
+      <label>Timezone</label>
+      <input id="timezone" value="">
+      <label>Instance ID (device unique identifier)</label>
+      <input id="instanceId" value="">
+    </div>
+
+    <!-- Install -->
+    <div class="card">
+      <h2>Event 3: First App Open</h2>
+      <p>Simulates the App SDK sending device fingerprint to the server for matching.</p>
+      <button class="btn btn-install" id="installBtn" onclick="doInstall()">Open App (First Launch)</button>
+      <div class="result" id="installResult"></div>
+    </div>
+
+    <!-- Register -->
+    <div class="card">
+      <h2>Event 4: Register</h2>
+      <p>Simulates user completing registration. Links to install via instance_id.</p>
+      <button class="btn btn-register" id="registerBtn" onclick="doRegister()" disabled>Register</button>
+      <div class="result" id="registerResult"></div>
+    </div>
+  </div>
+
+  <script>
+    // Device presets
+    var presets = [
+      {
+        name: "iPhone 16 Pro (zh-CN)",
+        ip: "203.0.113.50",  // match with landing page default
+        screen: "1206x2622", os: "iOS", os_version: "18.3",
+        model: "iPhone", language: "zh", timezone: "Asia/Shanghai",
+        instance_id: "inst_iphone_" + Math.random().toString(36).substr(2, 6)
+      },
+      {
+        name: "iPhone 16 (en-US)",
+        ip: "74.125.200.100",
+        screen: "1179x2556", os: "iOS", os_version: "18.3",
+        model: "iPhone", language: "en", timezone: "America/New_York",
+        instance_id: "inst_iphone_" + Math.random().toString(36).substr(2, 6)
+      },
+      {
+        name: "Pixel 8 (en-US)",
+        ip: "120.78.10.50",
+        screen: "1080x2400", os: "Android", os_version: "15",
+        model: "Pixel 8", language: "en", timezone: "America/Los_Angeles",
+        instance_id: "inst_pixel_" + Math.random().toString(36).substr(2, 6)
+      },
+      {
+        name: "Galaxy S24 (ko)",
+        ip: "180.150.60.70",
+        screen: "1080x2340", os: "Android", os_version: "14",
+        model: "SM-S921B", language: "ko", timezone: "Asia/Seoul",
+        instance_id: "inst_galaxy_" + Math.random().toString(36).substr(2, 6)
+      },
+      {
+        name: "Mac Desktop (ja)",
+        ip: "210.148.100.5",
+        screen: "3840x2160", os: "macOS", os_version: "15.3",
+        model: "Mac", language: "ja", timezone: "Asia/Tokyo",
+        instance_id: "inst_mac_" + Math.random().toString(36).substr(2, 6)
+      },
+      {
+        name: "Same IP as Landing Page",
+        ip: "", // will be filled by server
+        screen: "", os: "iOS", os_version: "18.3",
+        model: "iPhone", language: "", timezone: "",
+        instance_id: "inst_local_" + Math.random().toString(36).substr(2, 6),
+        _autoFill: true
+      }
+    ];
+
+    // Render presets
+    var presetsEl = document.getElementById('presets');
+    presets.forEach(function(p, i) {
+      var btn = document.createElement('button');
+      btn.className = 'preset';
+      btn.innerText = p.name;
+      btn.onclick = function() {
+        applyPreset(p);
+        document.querySelectorAll('.preset').forEach(function(b) { b.className = 'preset'; });
+        btn.className = 'preset active';
+      };
+      presetsEl.appendChild(btn);
+    });
+
+    function applyPreset(p) {
+      document.getElementById('ip').value = p.ip;
+      document.getElementById('screen').value = p.screen;
+      document.getElementById('os').value = p.os;
+      document.getElementById('osVersion').value = p.os_version;
+      document.getElementById('model').value = p.model;
+      document.getElementById('language').value = p.language;
+      document.getElementById('timezone').value = p.timezone;
+      document.getElementById('instanceId').value = p.instance_id;
+
+      // Auto fill from browser if empty
+      if (p._autoFill) {
+        var dpr = window.devicePixelRatio || 1;
+        document.getElementById('screen').value = Math.round(screen.width * dpr) + 'x' + Math.round(screen.height * dpr);
+        document.getElementById('language').value = (navigator.language || '').substring(0, 2);
+        try { document.getElementById('timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch(e) {}
+      }
+    }
+
+    // Auto-select first preset
+    applyPreset(presets[0]);
+    presetsEl.children[0].className = 'preset active';
+
+    // Install
+    function doInstall() {
+      var data = {
+        ip: document.getElementById('ip').value || undefined,
+        screen: document.getElementById('screen').value,
+        os: document.getElementById('os').value,
+        os_version: document.getElementById('osVersion').value,
+        model: document.getElementById('model').value,
+        language: document.getElementById('language').value,
+        timezone: document.getElementById('timezone').value,
+        instance_id: document.getElementById('instanceId').value,
+        platform: document.getElementById('os').value === 'Android' ? 'android' :
+                  document.getElementById('os').value === 'iOS' ? 'ios' : 'desktop',
+        app_version: "5.10.0"
+      };
+
+      document.getElementById('installBtn').disabled = true;
+      document.getElementById('installBtn').innerText = 'Matching...';
+
+      fetch('/api/track/install', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        var el = document.getElementById('installResult');
+        var m = res.match;
+
+        if (m.matched) {
+          el.className = 'result show success';
+          el.innerHTML = 'MATCHED! Click #' + m.click_id + ' (score: ' + m.score + '/' + m.threshold + ')\n' +
+            'Channel: ' + m.channel + '\n' +
+            'Campaign: ' + m.campaign + '\n\n' +
+            'Scoring:\n' + m.details.join('\n');
+        } else {
+          el.className = 'result show fail';
+          el.innerHTML = 'NO MATCH (best score: ' + m.score + '/' + m.threshold + ')\n\n' +
+            'Scoring vs best candidate:\n' + m.details.join('\n') +
+            '\n\nTip: Make sure you clicked Download on the Landing Page first,\nand the device fingerprint here matches.';
+        }
+
+        document.getElementById('installBtn').innerText = 'Open App (First Launch)';
+        document.getElementById('installBtn').disabled = false;
+        document.getElementById('registerBtn').disabled = false;
+        document.getElementById('step3').className = 'step done';
+        document.getElementById('step4').className = 'step current';
+      });
+    }
+
+    // Register
+    function doRegister() {
+      var data = {
+        instance_id: document.getElementById('instanceId').value
+      };
+
+      fetch('/api/track/register', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        var el = document.getElementById('registerResult');
+        el.className = 'result show info';
+        el.innerHTML = 'Register #' + res.register_id + ' recorded\n' +
+          'Channel: ' + (res.channel || '(organic)') + '\n' +
+          'Instance ID: ' + data.instance_id;
+        document.getElementById('step4').className = 'step done';
+      });
+    }
+  </script>
+</body>
+</html>
