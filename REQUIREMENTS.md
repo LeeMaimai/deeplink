@@ -17,7 +17,18 @@
 | `register` | 注册完成 | instance_id（用来回链 install） |
 
 ## 匹配算法 v1
-install 触发时，遍历所有 click，按以下维度打分，找最高分：
+
+这套打分算法在行业里称为 **Fingerprint Matching / Probabilistic Attribution（指纹匹配 / 概率归因）**，是 AppsFlyer、Branch、Adjust、Singular 等主流 MMP（Mobile Measurement Partner）在缺少设备 ID 时通用的归因方式，**并非自创**。
+
+**信号选择**：MMP 在 click 时记录 IP、UA、OS 版本、机型、屏幕尺寸、时区、locale 等设备指纹，App 首启时再次采集，比对相似度。我们选的 7 个维度是这套通用信号集的子集（参考 [Branch — Deferred Deep Linking with Device Snapshotting](https://www.branch.io/resources/blog/deferred-deep-linking-with-device-snapshotting/)、[AppsFlyer — What is Probabilistic Modeling](https://www.appsflyer.com/glossary/probabilistic-modeling/)）。
+
+**权重逻辑**：信号区分度越高权重越大。IP 在短时间窗内独立性最强（同 IP + 同时段 + 同型号机的碰撞率极低），故 40 分主导；屏幕分辨率次之 20 分；OS+版本组合 15 分；机型/语言/时区作为辅助验证各 5 分。这种"多信号加权 + 阈值判定"的形态和 [Mediasmart — Fingerprinting and Attribution](https://blog.mediasmart.io/fingerprinting-and-attribution-shining-a-light-in-the-dark) 描述一致。
+
+**24h 窗口**：Singular 等 MMP 将概率匹配的默认 lookback window 设为 24h，因为设备指纹的可识别性会随时间指数衰减（[Singular — Probabilistic Attribution FAQ](https://support.singular.net/hc/en-us/articles/360002290752-Probabilistic-Attribution-FAQ)）。我们采用相同的 24h 窗口，1h–24h 间线性衰减分值。
+
+---
+
+install 触发时，遍历所有 click，按以下维度打分，取最高分：
 
 | 维度 | 分值 |
 |---|---|
